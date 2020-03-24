@@ -95,27 +95,33 @@ input("\n--- Pulsar tecla para continuar ---\n")
 # puntos de inicio siguientes:
 
 def gd(w, lr, grad_fun, fun, max_iters = MAX_ITER):
+	for it in range(max_iters):
+		w = w - lr * grad_fun(w)
 	return w
 
 print ('Punto de inicio: (2.1, -2.1)\n')
+w = gd([2.1, -2.1], 0.01, gradf,f)
 print ('(x,y) = (', w[0], ', ', w[1],')\n')
 print ('Valor minimo: ',f(w))
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
 print ('Punto de inicio: (3.0, -3.0)\n')
+w = gd([3.0, -3.0], 0.01, gradf,f)
 print ('(x,y) = (', w[0], ', ', w[1],')\n')
 print ('Valor minimo: ',f(w))
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
 print ('Punto de inicio: (1.5, 1.5)\n')
+w = gd([1.5, 1.5], 0.01, gradf,f)
 print ('(x,y) = (', w[0], ', ', w[1],')\n')
 print ('Valor minimo: ',f(w))
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
 print ('Punto de inicio: (1.0, -1.0)\n')
+w = gd([1.0, -1.0], 0.01, gradf,f)
 print ('(x,y) = (', w[0], ', ', w[1],')\n')
 print ('Valor mínimo: ',f(w))
 
