@@ -4,7 +4,8 @@
 #####     LIBRERIAS     #####
 #############################
 
-
+import random
+import numpy as np
 
 #-------------------------------------------------------------------------------#
 #---------------------- Ejercicio sobre regresión lineal -----------------------#
@@ -37,31 +38,55 @@ def readData(file_x, file_y):
 
 # Funcion para calcular el error
 def Err(x,y,w):
-	return
+	return (1/len(x))* np.linalg.norm(x.dot(w) - y)**2
+
+# Calcula derivada de error para un modelo de regresión lineal.
+def dErr(x, y, w):
+  return 2/len(x)*(x.T.dot(x.dot(w) - y))
 
 # Gradiente Descendente Estocastico
 def sgd(x, y, lr, max_iters, tam_minibatch):
+	w = np.zeros((3,))
+	it = 0
+	indices = np.arange(len(x))
+	batch_start = 0
+
+	while it < max_iters:
+		it = it + 1
+		if(batch_start == 0):
+			indices = np.random.permutation(indices)
+
+		batch_end = batch_start + tam_minibatch
+		ind = indices[batch_start: batch_end]
+		w = w - lr * dErr(x[ind, :], y[ind], w)
+
+		batch_start += tam_minibatch
+		if(batch_start > len(x)):
+			batch_start = 0
+
 	return w
 
 # Algoritmo pseudoinversa
 def pseudoinverse(x, y):
-
+	u, s, v = np.linalg.svd(x)
+	d = np.diag([0 if np.allclose(p, 0) else 1/p for p in s])
+	w = v.T.dot(d).dot(d).dot(v).dot(x.T).dot(y)
 	return w
 
 # Lectura de los datos de entrenamiento
-x, y = readData()
+x, y = readData("./datos/X_train.npy", "./datos/y_train.npy")
 # Lectura de los datos para el test
-x_test, y_test = readData()
+x_test, y_test = readData("./datos/X_test.npy", "./datos/y_test.npy")
 
 print ('EJERCICIO SOBRE REGRESION LINEAL\n')
 print ('Ejercicio 1\n')
 # Gradiente descendente estocastico
 
-w = sgd()
+w = sgd(x, y, 0.01, 20000, 32)
 
 print ('Bondad del resultado para grad. descendente estocastico:\n')
-print ("Ein: ", Err())
-print ("Eout: ", Err())
+print ("Ein: ", Err(x, y, w))
+print ("Eout: ", Err(x_test, y_test, w))
 
 input("\n--- Pulsar tecla para continuar ---\n")
 
@@ -70,8 +95,8 @@ input("\n--- Pulsar tecla para continuar ---\n")
 w = pseudoinverse(x, y)
 
 print ('\nBondad del resultado para el algoritmo de la pseudoinversa:\n')
-print ("Ein: ", Err())
-print ("Eout: ", Err())
+print ("Ein: ", Err(x,y,w))
+print ("Eout: ", Err(x_test, y_test, w))
 
 
 #------------------------------Ejercicio 2 -------------------------------------#
