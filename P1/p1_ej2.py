@@ -84,8 +84,11 @@ print ('Ejercicio 1\n')
 # Gradiente descendente estocastico
 
 w = sgd(x, y, 0.01, 20000, 32)
-plt.scatter(x[:,1], x[:,2], c = y)
-plt.scatter(x[:,1], -w[1]*x[:,1] - (w[0]/w[2]))
+scatter = plt.scatter(x[:,1], x[:,2], c = y)
+plt.legend(*scatter.legend_elements(), title = "Clases")
+plt.plot(x[:,1], (-w[1]*x[:,1] - w[0])/w[2])
+plt.xlabel('Coordenada X')
+plt.ylabel('Coordenada Y')
 plt.show()
 
 print ('Bondad del resultado para grad. descendente estocastico:\n')
@@ -97,8 +100,11 @@ input("\n--- Pulsar tecla para continuar ---\n")
 # Algoritmo Pseudoinversa
 
 w = pseudoinverse(x, y)
-plt.scatter(x[:,1], x[:,2], c = y)
-plt.scatter(x[:,1], -w[1]*x[:,1] - (w[0]/w[2]))
+scatter = plt.scatter(x[:,1], x[:,2], c = y)
+plt.legend(*scatter.legend_elements(), title = "Clases")
+plt.plot(x[:,1], (-w[1]*x[:,1] - w[0])/w[2] )
+plt.xlabel('Coordenada X')
+plt.ylabel('Coordenada Y')
 plt.show()
 print ('\nBondad del resultado para el algoritmo de la pseudoinversa:\n')
 print ("Ein: ", Err(x,y,w))
@@ -122,6 +128,8 @@ print ('Muestra N = 1000, cuadrado [-1,1]x[-1,1]')
 x_aux = simula_unif(1000, 2, 1)
 
 plt.plot(x_aux, "bo")
+plt.xlabel('Coordenada X')
+plt.ylabel('Coordenada Y')
 plt.show()
 
 def genera_conjunto():
@@ -143,14 +151,21 @@ def genera_conjunto():
 
 x, y = genera_conjunto()
 
-plt.scatter(x[:,1], x[:,2], c = y)
-
+scatter = plt.scatter(x[:,1], x[:,2], c = y)
+plt.legend(*scatter.legend_elements(), title = "Clases")
+plt.xlabel('Coordenada X')
+plt.ylabel('Coordenada Y')
 plt.show()
 
 w = sgd(x, y, 0.01, 20000, 32)
 
 plt.scatter(x[:,1], x[:,2], c = y)
-plt.scatter(x[:,1], -w[1]*x[:,1] - (w[0]/w[2]))
+ymin, ymax = np.min(x[:, 2]), np.max(x[:, 2])
+plt.ylim(ymin, ymax)
+plt.plot(x[:,1], (-w[1]*x[:,1] - w[0])/w[2], label = "SGD")
+plt.xlabel('Coordenada X')
+plt.ylabel('Coordenada Y')
+plt.legend()
 plt.show()
 print ('Bondad del resultado para grad. descendente estocastico:\n')
 print ("Ein: ", Err(x, y, w))
@@ -193,7 +208,7 @@ def aniade_caract(x_aux):
 
 Ein_media = 0
 Eout_media = 0
-# REVISAR EL CODIGO
+
 for i in range(1000):
 	x, y_train = genera_conjunto()
 	x_aux, y_test = genera_conjunto()
