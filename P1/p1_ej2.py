@@ -45,7 +45,7 @@ def Err(x,y,w):
 def dErr(x, y, w):
   return 2/len(x)*(x.T.dot(x.dot(w) - y))
 
-# Gradiente Descendente Estocastico
+# Algoritmo de Gradiente Descendente Estocastico
 def sgd(x, y, lr, max_iters, tam_minibatch, tam = 3):
 	w = np.zeros((tam,))
 	it = 0
@@ -81,9 +81,10 @@ x_test, y_test = readData("./datos/X_test.npy", "./datos/y_test.npy")
 
 print ('EJERCICIO SOBRE REGRESION LINEAL\n')
 print ('Ejercicio 1\n')
-# Gradiente descendente estocastico
 
+# Gradiente descendente estocastico
 w = sgd(x, y, 0.01, 20000, 32)
+# Gráfica donde se pinta la muestra y la regresión obtenida
 scatter = plt.scatter(x[:,1], x[:,2], c = y)
 plt.legend(*scatter.legend_elements(), title = "Clases")
 plt.plot(x[:,1], (-w[1]*x[:,1] - w[0])/w[2])
@@ -91,6 +92,8 @@ plt.xlabel('Coordenada X')
 plt.ylabel('Coordenada Y')
 plt.show()
 
+print("Vector de pesos:")
+print(w)
 print ('Bondad del resultado para grad. descendente estocastico:\n')
 print ("Ein: ", Err(x, y, w))
 print ("Eout: ", Err(x_test, y_test, w))
@@ -98,19 +101,22 @@ print ("Eout: ", Err(x_test, y_test, w))
 input("\n--- Pulsar tecla para continuar ---\n")
 
 # Algoritmo Pseudoinversa
-
 w = pseudoinverse(x, y)
+# Gráfica donde se pinta la muestra y la regresión obtenida
 scatter = plt.scatter(x[:,1], x[:,2], c = y)
 plt.legend(*scatter.legend_elements(), title = "Clases")
 plt.plot(x[:,1], (-w[1]*x[:,1] - w[0])/w[2] )
 plt.xlabel('Coordenada X')
 plt.ylabel('Coordenada Y')
 plt.show()
+
+print("Vector de pesos:")
+print(w)
 print ('\nBondad del resultado para el algoritmo de la pseudoinversa:\n')
 print ("Ein: ", Err(x,y,w))
 print ("Eout: ", Err(x_test, y_test, w))
 
-
+input("\n--- Pulsar tecla para continuar ---\n")
 #------------------------------Ejercicio 2 -------------------------------------#
 
 # Simula datos en un cuadrado [-size,size]x[-size,size]
@@ -125,22 +131,24 @@ def f_etiq(x_1, x_2):
 
 print ('Ejercicio 2\n')
 print ('Muestra N = 1000, cuadrado [-1,1]x[-1,1]')
-x_aux = simula_unif(1000, 2, 1)
 
-plt.plot(x_aux, "bo")
-plt.xlabel('Coordenada X')
-plt.ylabel('Coordenada Y')
-plt.show()
-
-def genera_conjunto():
+# Función que genera el conjunto de datos pedido en el enunciado
+# Si el parámetro pintar esta a True se pinta el mapa de puntos 2D
+def genera_conjunto(pintar = False):
 	x_aux = simula_unif(1000, 2, 1)
+	# Grafica que pinta el mapa de puntos 2D como se pide
+	if(pintar):
+		plt.plot(x_aux, "bo")
+		plt.xlabel('Coordenada X')
+		plt.ylabel('Coordenada Y')
+		plt.show()
 
 	# b) Asignamos las etiquetas
 	y_f = f_etiq(x_aux[:900, 0], x_aux[:900, 1])
 	y_rand = np.random.choice([-1,1], 100)
 	y = np.hstack((y_f, y_rand))
 
-	# c) Estimamos los pesos
+	# c) Creamos la matriz de características
 	x = []
 	for i in range(x_aux.shape[0]):
 		x.append(np.array([1, x_aux[i][0], x_aux[i][1]]))
@@ -149,16 +157,19 @@ def genera_conjunto():
 	y = np.array(y, np.float64)
 	return x , y
 
-x, y = genera_conjunto()
+x, y = genera_conjunto(True)
 
+# Gráfica que pinta el mapa de etiquetas como se pide en el apartado b)
 scatter = plt.scatter(x[:,1], x[:,2], c = y)
 plt.legend(*scatter.legend_elements(), title = "Clases")
 plt.xlabel('Coordenada X')
 plt.ylabel('Coordenada Y')
 plt.show()
 
+# c) Utilizamos Gradiente Descendente Estocástico
 w = sgd(x, y, 0.01, 20000, 32)
 
+# Gráfica que pinta la regresión sobre el mapa de puntos etiqutados
 plt.scatter(x[:,1], x[:,2], c = y)
 ymin, ymax = np.min(x[:, 2]), np.max(x[:, 2])
 plt.ylim(ymin, ymax)
@@ -167,6 +178,10 @@ plt.xlabel('Coordenada X')
 plt.ylabel('Coordenada Y')
 plt.legend()
 plt.show()
+
+# Estimar el error del ajuste
+print("Vector de pesos:")
+print(w)
 print ('Bondad del resultado para grad. descendente estocastico:\n')
 print ("Ein: ", Err(x, y, w))
 
@@ -197,6 +212,7 @@ input("\n--- Pulsar tecla para continuar ---\n")
 
 # e) Repetir el mismo experimento anterior pero usando características no lineales.
 
+# Función que añade las características no lineales a la matriz X.
 def aniade_caract(x_aux):
 	x = []
 	for i in range(x_aux.shape[0]):
@@ -206,6 +222,7 @@ def aniade_caract(x_aux):
 
 	return x
 
+# Repetimos el experimento
 Ein_media = 0
 Eout_media = 0
 
@@ -219,10 +236,21 @@ for i in range(1000):
 	Ein_media += Err(x_train, y_train, w)
 	Eout_media += Err(x_test, y_test, w)
 
+
 Ein_media /= 1000
 Eout_media /= 1000
 print ('Errores Ein y Eout medios tras 1000reps del experimento con más características:\n')
 print ("Ein media: ", Ein_media)
 print ("Eout media: ", Eout_media)
 
-input("\n--- Pulsar tecla para continuar ---\n")
+# Gráfica que pinta la regresión junto con el mapa de puntos etiquetados.
+plt.scatter(x_train[:,1], x_train[:,2], c = y_train)
+xmin, xmax = np.min(x_train[:, 1]), np.max(x_train[:, 1])
+ymin, ymax = np.min(x_train[:, 2]), np.max(x_train[:, 2])
+X, Y = np.meshgrid(np.linspace(xmin-0.2, xmax+0.2, 100), np.linspace(ymin-0.2, ymax+0.2, 100))
+F = w[2] * Y + w[3] * X * Y + w[5] * Y * Y + w[0] + w[1] * X + w[4] * X * X
+plt.contour(X, Y, F, levels = [0]).collections[0].set_label("SGD")
+plt.xlabel('Coordenada X')
+plt.ylabel('Coordenada Y')
+plt.legend()
+plt.show()

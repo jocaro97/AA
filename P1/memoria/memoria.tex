@@ -321,7 +321,7 @@ pero sin embargo no se estabiliza.
 
 Es por esto que en este caso una tasa de aprendizaje de $\eta = 0.1$ es
 demasiado elevada y depende del número de iteraciones que acabe en un punto mayor o menor, mientras que
-con una tasa de $\eta = 0.01$ el algoritmo converge rápido y alcanza un mínimo aunque dependa del
+con una tasa de $\eta = 0.01$ el algoritmo converge rápido y alcanza un mínimo, aunque este dependa del
 punto inicial para que sea el mínimo absoluto.
 
 \begin{figure}[H]
@@ -343,7 +343,7 @@ Se ha ejecutado el algoritmo con una tasa de aprendizaje $\eta = 0.01$.
 \toprule
 Punto inicio   & valor mínimo                    & ( x, y )                                 \\ \midrule
 $(2.1 , -2.1)$ & {\color[HTML]{000000} $-1.820$} & {\color[HTML]{000000} $(2.244, -2.238)$} \\ \midrule
-$(3, -3)$      & {\color[HTML]{000000} $-0.3812$} & {\color[HTML]{000000} $(2.731, -2.713)$} \\ \midrule
+$(3, -3)$      & {\color[HTML]{000000} $-0.381$} & {\color[HTML]{000000} $(2.731, -2.713)$} \\ \midrule
 $(1.5, 1.5)$   & {\color[HTML]{000000} $18.042$} & {\color[HTML]{000000} $(1.779, 1.031)$}  \\ \midrule
 $(1, -1)$      & {\color[HTML]{000000} $-0.381$} & {\color[HTML]{000000} $(1.269, -1.287)$} \\ \bottomrule
 \end{tabular}
@@ -374,6 +374,9 @@ iterativamente para ayudar al algoritmo a converger hacía un mínimo.
 Por otra parte elegir un \textbf{punto inicial} adecuado puede ser clave, ya que como vimos en nuestro experimento
 si elegiamos un punto muy alejado del mínimo absoluto, al estar este rodeado de mínimos locales el algoritmo
 converge a uno de estos.
+
+Estas dos tareas se complican cuando no podemos dibujar la función, dejando el ajuste de estos parámetros
+a la experimentación.
 \end{enumerate}
 
 \section{Regresión lineal}
@@ -399,12 +402,20 @@ En primer lugar ejecutamos el algoritmo de gradiente descendente estocástico co
 el cual cambia su tamaño en el último experimento.}{tam}}: por defecto esta a 3, cambiará
 su valor en el último experimento.
 
+Para estudiar la bondad de los modelos utilizamos la función de error cuadrático medio:
+$$E_{in}(w) = \frac{1}{N} = \sum_{n=1}^N (w^T x_n - y_n)^2 $$
+La función de error $E_{out}$ se calcula aplicando la misma fórmula pero a los datos de test.
+
+También mostramos la recta $w^T x = 0$ obtenida en el método.
+
 Obtenemos como resultados:
 \begin{lstlisting}
+Vector de pesos:
+[-1.17209772 -0.77060781 -0.48046423]
 Bondad del resultado para grad. descendente estocastico:
 
-Ein:  0.07996130732163849
-Eout:  0.13396594439564616
+Ein:  0.07968129651434186
+Eout:  0.13221558149479878
 \end{lstlisting}
 \end{itemize}
 \begin{figure}[H]
@@ -413,9 +424,22 @@ Eout:  0.13396594439564616
 \caption{Algoritmo de gradiente descendente estocástico.}
 \end{figure}
 
+Para programar el algoritmo de las pseudo-inversa a la hora de calcular el vector $w$ en vez de
+utilizar su versión analítica $w = X^{+}y$, donde $X$ es la matrix $X = (x_n^T)_{n=1}^N$
+con $x_i = (1, x_{n1}, x_{n2})^T$ vector de características y $X^{+} =(X^TX)^{-1}X^T$ llamada \textit{pseudoinversa}
+de la matriz, se utiliza la descomposición SVD de la matriz $X$.
+
+Hemos visto en teoría que si $X$ tiene dimensiones $N x (d + 1)$ podemos escribir $X = U \Sigma V^T$, donde
+$U$ es una matriz ortogonal $NxN$, $\Sigma$ una matriz rectangular diagonal $N x (d+1)$ y $V$ una matriz ortogonal
+$(d+1) x (d + 1)$. Siguiendo un razonamiento teórico llegamos a que $X^{+} = V \Sigma U^T $, fórmula que utilizaremos
+para calcular la pseudo-inversa.
+
 Ejecutamos a continuación el algoritmo de la pseudo-inversa con los datos proporcionado para
 el ejercicio y obtenemos:
 \begin{lstlisting}
+Vector de pesos:
+[-1.11588016 -1.24859546 -0.49753165]
+
 Bondad del resultado para el algoritmo de la pseudoinversa:
 
 Ein:  0.07918658628900395
@@ -427,6 +451,20 @@ Eout:  0.13095383720052586
 \includegraphics[width=0.7\textwidth]{./img/ej22}
 \caption{Algoritmo de la pseudo-inversa.}
 \end{figure}
+
+Si comparamos los dos métodos vemos que en general los dos obtienen muy buenos resultados
+ya que el error obtenido es bastante bajo. Consiguiendo el mejor resultado por muy poco el algoritmo
+de la pseudo-inversa.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ccc}
+\hline
+Método         & $E_{in}$ & $E_{out}$ \\ \hline
+SGD            & 0.0797   & 0.1322    \\ \hline
+Pseudo-inversa & 0.0792   & 0.1310    \\ \hline
+\end{tabular}
+\end{table}
 
 \begin{figure}[H]
 \centering
@@ -442,7 +480,9 @@ aumentamos la complejidad del modelo lineal usado.
 \item Generar una muestra de entrenamiento de $N = 1000$ puntos en el cuadrado
 $X = [−1, 1] × [−1, 1]$. Pintar el mapa de puntos 2D.
 
-Para ello se ha definido la función \verb|simula_unif|. La ejecutamos y pintamos el resultado.
+Para ello se ha definido la función \verb|simula_unif| que es llamada dentro de
+la función \verb|genera_conjunto|, donde si se le pasa como parámetro el valor \textit{True}
+se dibuja el mapa de puntos 2D.
 
 \begin{figure}[H]
 \centering
@@ -477,9 +517,11 @@ máximas $20000$ y tamaño del \textit{minibatch} 32. Obtenemos los siguientes r
 
 \begin{lstlisting}
 Muestra N = 1000, cuadrado [-1,1]x[-1,1]
+Vector de pesos:
+[ 0.03971169 -0.49208204 -0.02785509]
 Bondad del resultado para grad. descendente estocastico:
 
-Ein:  0.9017328368880705
+Ein:  0.9156762682380968
 \end{lstlisting}
 \begin{figure}[H]
 \centering
@@ -502,6 +544,11 @@ Eout media:  0.9149857744864048
 
 \item Valore que tan bueno considera que es el ajuste con este modelo lineal a la vista
 de los valores medios obtenidos de $E_{in}$ y $E_{out}$.
+
+Tras ejecutar el experimiento 1000 veces observamos que el error es muy alto, esto no nos
+sorprende puesto que viendo la distribución del mapa de etiquetas es prácticamente imposible
+que una recta separe las dos clases.
+
 \end{enumerate}
 \begin{itemize}
 \item Repetir el mismo experimento anterior pero usando características no lineales. Ahora
@@ -523,22 +570,48 @@ Eout media:  0.5759666841725378
 \item A la vista de los resultados de los errores promedios $E_{in}$ y $E_{out}$ obtenidos en los dos
 experimentos ?`Que modelo considera que es el más adecuado? Justifique la decisión.
 
+Los datos hablan por si solos, si añadimos características no lineales conseguimos una regresión
+que se ajusta mejor consiguiendo disminuir los errores considerablemente. Al añadir términos cuadráticos
+conseguimos que se asemeje a la función que utilizamos para etiquetar y logramos que los errores
+disminuyan a costa de aumentar el vector de pesos, aunque el error sigue siendo considerable al haber
+bastantes puntos de ruido que elevan este valor. En la siguiente gráfica podemos observar como
+la regresión se ajusta bien al modelo.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{./img/conclusion}
+\caption{Regresión utilizando el método SGD.}
+\end{figure}
+
 \end{itemize}
 \end{enumerate}
 
 \section{BONUS}
 
 \textbf{Método de Newton}. Implementar el algoritmo de minimización de Newton
-y aplicarlo a la función $f (x, y)$ dada en el ejercicio.3. Desarrolle los mismos experimentos
+y aplicarlo a la función $f (x, y)$ dada en el ejercicio 3. Desarrolle los mismos experimentos
 usando los mismos puntos de inicio.
 
-Este ejercicio se ha desarrollado en el archivo \verb|bonus.py|.
+Este ejercicio se ha desarrollado en el archivo \verb|bonus.py|. Para este ejercicio se han
+implementado dos funciones \verb|newton_grafica| que va guardando los resultados del algoritmo
+en una gráfica y \verb|newton| que ejecuta el método de Newton. Este algoritmo busca ceros y como
+lo aplicamos sobre el gradiente podemos encontrar puntos mínimos, máximos y puntos de silla. Esto
+se aleja de nuestro objetivo que es buscar el mínimo global.
 
+\spanishdecimal{.}
+En primer lugar ejecutamos el algoritmo con punto inicial $(1,-1)$, tasa de aprendizaje
+$\eta = 0.01$ y un máximo de iteraciones de $50$. Obteniendo los siguientes resultados.
+
+\spanishdecimal{.}
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{./img/bonus21}
 \caption{Tasa de aprendizaje $\eta = 0.01$}
 \end{figure}
+
+\spanishdecimal{.}
+Ejecutamos otra vez con los mismos parámetros cambiando la tasa de aprendizaje a $\eta = 0.1$.
+Obtenemos los siguientes resultados.
 
 \begin{figure}[H]
 \centering
@@ -546,24 +619,66 @@ Este ejercicio se ha desarrollado en el archivo \verb|bonus.py|.
 \caption{Tasa de aprendizaje $\eta = 0.1$}
 \end{figure}
 
+\spanishdecimal{.}
+Si comparamos las dos tasas podemos ver que en este caso una tasa $\eta = 0.01$ converge demasiado
+lento mientras que con $\eta = 0.01$ converge rápidamente al óptimo (máximo o punto de silla).
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.7\textwidth]{./img/bonus23}
 \caption{Comparación entre las dos tasas de aprendizaje.}
 \end{figure}
 
+Ejecutamos el método con una tasa de aprendizaje $\eta = 0.1$, un máximo de iteraciones de $50$
+y cambiando el punto inicial. Obtenemos el siguiente resultado:
+
 \begin{table}[H]
-\spanishdecimal{.}
 \centering
+\spanishdecimal{.}
 \begin{tabular}{ccc}
 \hline
-Punto inicio   & valor del óptimo obtenido                    & ( x, y )                                 \\ \hline
-$(2.1 , -2.1)$ & {\color[HTML]{000000} $-0.058$} & {\color[HTML]{000000} $(2.028, -2.028)$} \\ \hline
-$(3, -3)$      & {\color[HTML]{000000} $3.093$}  & {\color[HTML]{000000} $(3.033, -3.017)$} \\ \hline
-$(1.5, 1.5)$   & {\color[HTML]{000000} $24.974$} & {\color[HTML]{000000} $(1.373, 1.516)$}  \\ \hline
-$(1, -1)$      & {\color[HTML]{000000} $3.093$}  & {\color[HTML]{000000} $(0.967, -0.983)$} \\ \hline
+{\color[HTML]{000000} Punto inicio}   & {\color[HTML]{000000} valor de f} & {\color[HTML]{000000} ( x, y )}          \\ \hline
+{\color[HTML]{000000} $(2.1 , -2.1)$} & {\color[HTML]{000000} $-0.000001$}  & {\color[HTML]{000000} $(2.0, -2.0)$}     \\ \hline
+{\color[HTML]{000000} $(3, -3)$}      & {\color[HTML]{000000} $3.108$}      & {\color[HTML]{000000} $(3.054, -3.028)$} \\ \hline
+{\color[HTML]{000000} $(1.5, 1.5)$}   & {\color[HTML]{000000} $23.690$}     & {\color[HTML]{000000} $(1.425, 1.369)$}  \\ \hline
+{\color[HTML]{000000} $(1, -1)$}      & {\color[HTML]{000000} $3.108$}      & {\color[HTML]{000000} $(0.946, -0.972)$} \\ \hline
 \end{tabular}
+\caption{Tasa de aprendizaje $\eta = 0.1$.}
 \end{table}
+
+Ejecutamos el método con una tasa de aprendizaje $\eta = 0.01$, un máximo de iteraciones de $50$
+y cambiando el punto inicial. Obtenemos el siguiente resultado:
+
+\begin{table}[H]
+\centering
+\spanishdecimal{.}
+\begin{tabular}{ccc}
+\hline
+{\color[HTML]{000000} Punto inicio}   & {\color[HTML]{000000} valor de f} & {\color[HTML]{000000} ( x, y )}          \\ \hline
+{\color[HTML]{000000} $(2.1 , -2.1)$} & {\color[HTML]{000000} $-0.169$}     & {\color[HTML]{000000} $(2.048, -2.048)$} \\ \hline
+{\color[HTML]{000000} $(3, -3)$}      & {\color[HTML]{000000} $3.067$}      & {\color[HTML]{000000} $(3.021, -3.011)$} \\ \hline
+{\color[HTML]{000000} $(1.5, 1.5)$}   & {\color[HTML]{000000} $24.893$}     & {\color[HTML]{000000} $(1.427, 1.508)$}  \\ \hline
+{\color[HTML]{000000} $(1, -1)$}      & {\color[HTML]{000000} $3.067$}      & {\color[HTML]{000000} $(0.979, -0.989)$} \\ \hline
+\end{tabular}
+\caption{Tasa de aprendizaje $\eta = 0.01$.}
+\end{table}
+
+Podemos comprobar que cambiando la tasa de aprendizaje cambia un poco los valores obtenidos, esto es debido
+a que dependiendo de los parámetros el algoritmo alcanzará un mínimo, un máximo o un punto de silla. De hecho para
+estos puntos el algoritmo no busca el mínimo puesto que no decrece.
+
+Para observar como decrece el algoritmo ejecutamos de nuevo \verb|newton_grafica| con una tasa
+de aprendizaje $\eta = 1$ y como punto inicial $(2.1, -2.1)$ obteniendo la siguiente gráfica:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{./img/bonus24}
+\caption{Tasa de aprendizaje $\eta = 1$}
+\end{figure}
+
+
+Como conclusión, si comparamos los resultados con el algoritmo de gradiente descendente el método de Newton nos da peores resultados,
+a cambio este algoritmo converge más rápido aunque tiene un mayor coste computacional ya que tiene que calcular una inversa.
 
 %printbibliography
 

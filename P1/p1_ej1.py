@@ -18,8 +18,7 @@ import matplotlib.pyplot as plt
 # Constantes
 MAX_ITER = 100
 
-# Fijamos la semilla
-
+# Función E
 def E(w):
 	return pow(w[0] * np.exp(w[1]) - 2 * w[1] * np.exp(-w[0]), 2)
 
@@ -53,7 +52,7 @@ print ('Coordenadas obtenidas: (', w[0], ', ', w[1],')')
 input("\n--- Pulsar tecla para continuar ---\n")
 
 #------------------------------Ejercicio 2 -------------------------------------#
-
+# Función f
 def f(w):
 	return pow(w[0] - 2, 2) + 2 * pow(w[1] + 2, 2) + 2 * math.sin(2* math.pi * w[0]) * math.sin(2 * math.pi *w[1])
 
@@ -69,8 +68,8 @@ def fy(w):
 def gradf(w):
 	return np.array([fx(w), fy(w)])
 
-# a) Usar gradiente descendente para minimizar la función f, con punto inicial (1,1)
-# tasa de aprendizaje 0.01 y max 50 iteraciones. Repetir con tasa de aprend. 0.1
+# Algoritmo de gradiente descendente en el que se van guardando los puntos
+# para posteriormente dibujarlos en una gráfica.
 def gd_grafica(w, lr, grad_fun, fun, max_iters = MAX_ITER):
 	graf = []
 	for it in range(max_iters):
@@ -83,7 +82,8 @@ def gd_grafica(w, lr, grad_fun, fun, max_iters = MAX_ITER):
 	plt.ylabel('f(x,y)')
 	plt.show()
 
-
+# a) Usar gradiente descendente para minimizar la función f, con punto inicial (1,1)
+# tasa de aprendizaje 0.01 y max 50 iteraciones. Repetir con tasa de aprend. 0.1
 print ('Resultados ejercicio 2\n')
 print ('\nGrafica con learning rate igual a 0.01')
 gd_grafica([1, -1], 0.01, gradf, f, 50)
@@ -91,14 +91,14 @@ print ('\nGrafica con learning rate igual a 0.1')
 gd_grafica([1, -1], 0.1, gradf, f, 50)
 input("\n--- Pulsar tecla para continuar ---\n")
 
-# b) Obtener el valor minimo y los valores de (x,y) con los
-# puntos de inicio siguientes:
-
+# Algoritmo de gradiente descendete
 def gd(w, lr, grad_fun, fun, max_iters = MAX_ITER):
 	for it in range(max_iters):
 		w = w - lr * grad_fun(w)
 	return w
 
+# b) Obtener el valor minimo y los valores de (x,y) con los
+# puntos de inicio siguientes:
 print ('Punto de inicio: (2.1, -2.1)\n')
 w = gd([2.1, -2.1], 0.01, gradf,f)
 print ('(x,y) = (', w[0], ', ', w[1],')\n')
@@ -124,5 +124,3 @@ print ('Punto de inicio: (1.0, -1.0)\n')
 w = gd([1.0, -1.0], 0.01, gradf,f)
 print ('(x,y) = (', w[0], ', ', w[1],')\n')
 print ('Valor mínimo: ',f(w))
-
-input("\n--- Pulsar tecla para continuar ---\n")
