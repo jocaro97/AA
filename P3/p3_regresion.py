@@ -73,6 +73,26 @@ preprocesado = [("escalado", StandardScaler())]
 
 preprocesador = Pipeline(preprocesado)
 
+
+def mostrar_correlaciones(datos):
+	f, ax = plt.subplots(figsize=(10, 8))
+	corr = datos.corr()
+	sns.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True), square=True, ax=ax)
+	f.suptitle('Matriz Correlaciones')
+	plt.show()
+
+mostrar_correlaciones(X_train)
+
+def muestra_correlaciones_procesados(datos):
+	f, ax = plt.subplots(figsize=(10, 8))
+	corr = np.corrcoef(datos.T)
+	sns.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True),square=True, ax=ax)
+	f.suptitle('Matriz Correlaciones')
+	plt.show()
+
+datos_preprocesados = preprocesador.fit_transform(X_train)
+muestra_correlaciones_procesados(datos_preprocesados)
+
 # Entrenamiento
 # Regresion lineal
 
