@@ -12,17 +12,13 @@ from pandas_summary import DataFrameSummary
 
 import seaborn as sns
 
-from IPython.core.display import display
-from sklearn.model_selection import train_test_split
-from sklearn import datasets, svm, preprocessing
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, SGDClassifier, Perceptron, RidgeClassifier
-from sklearn.svm import LinearSVC
-from sklearn.feature_selection import VarianceThreshold
+from sklearn.linear_model import LogisticRegression, Perceptron, RidgeClassifier
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix
+from sklearn.base import BaseEstimator
 
 import warnings
 
@@ -32,6 +28,37 @@ warnings.filterwarnings('ignore')
 # --------------------------------------------------------------------------------------
 # Semilla
 SEED = 100
+np.random.seed(SEED)
+
+# Clase que funciona como cualquier estimador
+class ClfSwitcher(BaseEstimator):
+    def __init__(
+        self,
+        estimator = LogisticRegression(),
+    ):
+        """
+        A Custom BaseEstimator that can switch between classifiers.
+        :param estimator: sklearn object - The classifier
+        """
+
+        self.estimator = estimator
+
+
+    def fit(self, X, y=None, **kwargs):
+        self.estimator.fit(X, y)
+        return self
+
+
+    def predict(self, X, y=None):
+        return self.estimator.predict(X)
+
+
+    def predict_proba(self, X):
+        return self.estimator.predict_proba(X)
+
+
+    def score(self, X, y):
+        return self.estimator.score(X, y)
 
 # Funcion para leer los datos
 def readData(filename):
@@ -56,18 +83,7 @@ X_test = X_test.add_prefix("Característica ")
 y_df.rename(columns={64:"Dígito"}, inplace = True)
 y_test_df.rename(columns={64:"Dígito"}, inplace = True)
 
-# Comprobamos que no hay ningún valor perdido y también que
-# ningún valor se salga del intervalo [0,16]
-train_df = pd.DataFrame(data = np.c_[X,y])
-train_sum = DataFrameSummary(train_df).summary()
-print("Comprobamos que no hay valores perdidos en el dataset entrenamiento:")
-display(train_sum)
-
-test_df = pd.DataFrame(data = np.c_[X_test,y_test])
-test_sum = DataFrameSummary(test_df).summary()
-print("Comprobamos que no hay valores perdidos en el dataset de test:")
-display(test_sum)
-
+# Calculamos el tamaño de los conjuntos y su porcentaje
 print("Hay {} datos de enternamiento".format(X.shape[0]))
 print("Hay {} datos de test".format(X_test.shape[0]))
 
@@ -75,16 +91,22 @@ porc_train = 100*X.shape[0]/(X.shape[0]+ X_test.shape[0])
 porc_test = 100*X_test.shape[0]/(X.shape[0]+ X_test.shape[0])
 print("Hay {}% de datos de entrenamiento y un {}% de datos de test.".format(porc_train,porc_test))
 
-print(y_df)
-# Comprobamos que las clases estan balanceadas
-print("Dataset de entrenamiento")
-for i in range (len(y_df['Dígito'].unique())):
-	print("\t {} instancias del dígito {}".format(y_df['Dígito'].value_counts()[i],i))
-print("\n")
-print("Dataset de test")
-for i in range (len(y_df['Dígito'].unique())):
-	print("\t {} instancias del dígito {}".format(y_test_df['Dígito'].value_counts()[i],i))
+# Comprobamos que no hay ningún valor perdido, también que
+# ningún valor se salga del intervalo [0,16] y ninguna etiqueta del intervalo [0.9]
+print("Número de valores perdidos en el conjunto de entrenamiento: {}".format(X.isnull().sum().sum()))
+print("Número de valores perdidos en el conjunto de test: {}".format(X_test.isnull().sum().sum()))
+print("Valor mínimo de las caraterísticas del conjunto de entrenamiento: {}".format(X.values.min()))
+print("Valor máximo de las caraterísticas del conjunto de entrenamiento: {}".format(X.values.max()))
+print("Valor mínimo de las caraterísticas del conjunto de test: {}".format(X_test.values.min()))
+print("Valor máximo de las caraterísticas del conjunto de test: {}".format(X_test.values.max()))
+print("Valor mínimo de las etiquetas del conjunto de entrenamiento: {}".format(y_df.values.min()))
+print("Valor máximo de las etiquetas del conjunto de entrenamiento: {}".format(y_df.values.max()))
+print("Valor mínimo de las etiquetas del conjunto de test: {}".format(y_df.values.min()))
+print("Valor máximo de las etiquetas del conjunto de test: {}".format(y_df.values.max()))
 
+
+# Comprobamos que las clases estan balanceadas
+train_df = pd.DataFrame(data = np.c_[X,y])
 clases = np.unique(train_df.values[:,-1])
 numero_elementos = []
 for i in clases:
@@ -92,21 +114,31 @@ for i in clases:
 
 df_plot = pd.DataFrame(columns= ["Dígitos", "Número de ejemplos"], data =[[c,n] for c, n in zip(clases,numero_elementos)])
 sns.barplot(x="Dígitos", y ="Número de ejemplos", data = df_plot)
-plt.title("Número de ejemplos de cada clase")
+plt.title("Número de ejemplos de cada clase en el conjunto Train")
 plt.show()
+input("\n--- Pulsar tecla para continuar ---\n")
 
-# Comprobamos que las etiquetas estan dentro del intervalo que [0,9]
-print("Todos los valores de las etiquetas de entrenamiento pertenecen al intervalo: [{},{}]".format(y_df.values.min(), y_df.values.max()))
 
-print("Todos los valores de las etiquetas del conjunto de test pertenecen al intervalo: [{},{}]".format(y_test_df.values.min(), y_test_df.values.max()))
+test_df = pd.DataFrame(data = np.c_[X_test,y_test])
+clases = np.unique(test_df.values[:,-1])
+numero_elementos = []
+for i in clases:
+	numero_elementos.append(y_df['Dígito'].value_counts()[i])
+
+df_plot = pd.DataFrame(columns= ["Dígitos", "Número de ejemplos"], data =[[c,n] for c, n in zip(clases,numero_elementos)])
+sns.barplot(x="Dígitos", y ="Número de ejemplos", data = df_plot)
+plt.title("Número de ejemplos de cada clase en el conjunto Test")
+plt.show()
+input("\n--- Pulsar tecla para continuar ---\n")
+
 
 # Preprocesado
-preprocesado = [("varianza", VarianceThreshold(threshold=0.0)),
-                ("escalado", StandardScaler()),
+preprocesado = [("escalado", StandardScaler()),
                 ("PCA", PCA(n_components=0.95))]
 
 preprocesador = Pipeline(preprocesado)
 
+# Mostramos la matriz de correlaciones antes del preprocesado de datos
 def mostrar_correlaciones(datos):
 	f, ax = plt.subplots(figsize=(10, 8))
 	corr = datos.corr()
@@ -115,7 +147,9 @@ def mostrar_correlaciones(datos):
 	plt.show()
 
 mostrar_correlaciones(X)
+input("\n--- Pulsar tecla para continuar ---\n")
 
+# Mostramos la matriz de correlaciones después del preprocesado de datos
 def muestra_correlaciones_procesados(datos):
 	f, ax = plt.subplots(figsize=(10, 8))
 	corr = np.corrcoef(datos.T)
@@ -125,83 +159,44 @@ def muestra_correlaciones_procesados(datos):
 
 datos_preprocesados = preprocesador.fit_transform(X)
 muestra_correlaciones_procesados(datos_preprocesados)
+input("\n--- Pulsar tecla para continuar ---\n")
+
 
 # Entrenamiento
+# Añadimos el clasificador ClfSwitcher para evitar errores de compilación
+preprocesado = [("escalado", StandardScaler()),
+                ("PCA", PCA(n_components=0.95)),('clf', ClfSwitcher())]
 
-# LinearSVC
-svc = (LinearSVC(penalty='12', multi_class='crammer_singer', loss='hinge'))
+preprocesador = Pipeline(preprocesado)
 
-svc_pipe = Pipeline(steps=[('preprocesador', preprocesador),('clf', svc)])
+# Modelos
+modelos = [
+		  {'clf': [LogisticRegression(penalty='l2', # Regularización Ridge (L2)
+		  						  multi_class='ovr', # Indicamos que la regresión logística es multinomial
+		  						  solver = 'lbfgs', # Algoritmo a utilizar en el problema de optimización, aunque es el dado por defecto
+		  						  max_iter = 1000)],
+	       'clf__C':[2.0, 1.0, 0.1, 0.01, 0.001]},
+		  {'clf': [Perceptron(penalty = 'l2', # Regularización de Ridge (L2)
+                              tol = 1e-3, # Criterio de parada
+                              class_weight = "balanced")]},  #clases balanceada
+		  {'clf': [RidgeClassifier(normalize=True, # datos normalizados
+                                   class_weight = "balanced", # clases balanceadas
+                                   random_state=SEED,
+                                   tol=0.1)],
+		   'clf__alpha': [1.0, 0.1, 0.01, 0.001]},
+		  ]
 
-params_svc = {'clf__C': [2.0, 1.0, 0.1, 0.01, 0.001]}
-
-# LogisticRegression
-log = (LogisticRegression(penalty='l2', # Regularización Ridge (L2)
-						  multi_class='multinomial', # Indicamos que la regresión logística es multinomial
-						  solver = 'lbfgs', # Algoritmo a utilizar en el problema de optimización, aunque es el dado por defecto
-						  max_iter = 1000))
-
-log_pipe = Pipeline(steps=[('preprocesador', preprocesador),('clf', log)])
-
-params_log = {'clf__C': [2.0, 1.0, 0.1, 0.01, 0.001]}
-
-# Perceptron
-perceptron = (Perceptron(tol = 1e-3, random_state = 0))
-
-perceptron_pipe = Pipeline(steps=[('preprocesador', preprocesador), ('clf', perceptron)])
-
-rc = (RidgeClassifier(normalize=True, random_state=SEED, tol=0.1))
-
-rc_pipe = Pipeline(steps=[('preprocesador', preprocesador),('clf',rc)])
-
-params_rc = {'clf__alpha': [1.0, 0.1, 0.01, 0.001]}
-
-sgd = (SGDClassifier(loss = 'hinge', penalty = 'l2', random_state = SEED))
-
-sgd_pipe = Pipeline(steps=[('preprocesador', preprocesador), ('clf', sgd)])
-
-
-mejores_clasificadores = []
-
-grid = GridSearchCV(svc_pipe, params_svc, scoring='accuracy', cv=5) # Cross-validation para elegir hiperparámetros
+# cross -validation
+grid = GridSearchCV(preprocesador, modelos, scoring='accuracy', cv=5, n_jobs = -1)
 grid.fit(X, y)
-mejores_clasificadores.append(grid.best_estimator_)
-
-grid = GridSearchCV(log_pipe, params_log, scoring='accuracy', cv=5) # Cross-validation para elegir hiperparámetros
-grid.fit(X, y)
-mejores_clasificadores.append(grid.best_estimator_)
-
-grid = GridSearchCV(rc_pipe, params_rc , scoring='accuracy', cv=5) # Cross-validation para elegir hiperparámetros
-grid.fit(X, y)
-mejores_clasificadores.append(grid.best_estimator_)
-
-mejores_clasificadores.append(perceptron_pipe.fit(X,y))
-mejores_clasificadores.append(sgd_pipe.fit(X,y))
-
-accuracy_svc = mejores_clasificadores[0].score(X, y)
-accuracy_log = mejores_clasificadores[1].score(X, y)
-accuracy_rc = mejores_clasificadores[2].score(X,y)
-accuracy_perceptron = mejores_clasificadores[3].score(X,y)
-accuracy_sgd = mejores_clasificadores[4].score(X,y)
-
-print('accuracy_svc: {}'.format(accuracy_svc))
-print('accuracy_log: {}'.format(accuracy_log))
-print('accuracy_rc: {}'.format(accuracy_rc))
-print('accuracy_perceptron: {}'.format(accuracy_perceptron))
-print('accuracy_sdg: {}'.format(accuracy_sgd))
-
-clasificador = mejores_clasificadores[0]
-for i in range(len(mejores_clasificadores)):
-	if(mejores_clasificadores[i].score(X,y) > clasificador.score(X,y)):
-		clasificador = mejores_clasificadores[i]
-
-clasificador.fit(X, y)
+clasificador = grid.best_estimator_
+# Mostramos el clasificador elegido
+print("Clasificador elegifo: {}".format(clasificador))
 y_predict = clasificador.predict(X_test)
 
 # Matriz de confusion
 cm = confusion_matrix(y_test, y_predict)
 cm = 100*cm.astype("float64")/cm.sum(axis=1)[:,np.newaxis]
-print(cm)
 fig = plt.figure()
 ax = fig.add_subplot()
 cax = ax.matshow(cm, cmap ="BuGn")
@@ -213,17 +208,14 @@ ax.set(title="Matriz de confusión",
          xlabel="Etiqueta real",
          ylabel="Etiqueta predicha")
 
+# Añadimos los porcentajes a las celdas
 for i in range(10):
 	for j in range(10):
-		if(i == 0):
-			ax.text(j, i,"{:.0f}%".format(cm[i, j]), ha="center", va="top")
-		elif(i == 9):
-			ax.text(j, i, "{:.0f}%".format(cm[i, j]), ha="center", va="bottom")
-		else:
-			ax.text(j, i, "{:.0f}%".format(cm[i, j]), ha="center", va="center")
+		ax.text(j, i, "{:.0f}%".format(cm[i, j]), ha="center", va="center")
 
 plt.show()
+input("\n--- Pulsar tecla para continuar ---\n")
 
-
+# Resultados
 print("E_in: {}".format(1 - clasificador.score(X, y)))
-print("E_out: {}".format(1 - clasificador.score(X_test, y_test)))
+print("E_test: {}".format(1 - clasificador.score(X_test, y_test)))
